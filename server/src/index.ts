@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import authRouter from './routes/auth'
 import quizzesRouter from './routes/quizzes'
+import attemptsRouter from './routes/attempts'
 import { logger } from 'hono/logger'
 
 const app = new Hono()
@@ -21,6 +22,7 @@ app.use(
 
 app.route('/api/auth', authRouter)
 app.route('/api/quizzes', quizzesRouter)
+app.route('/api/attempts', attemptsRouter)
 
 app.get('/', (c) => {
   return c.text('Hello QuizForge API!')
