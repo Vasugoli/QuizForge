@@ -5,6 +5,7 @@ import authStore from './store/authStore'
 import Navbar from './components/shared/Navbar'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import QuizzesPage from './pages/quizzes/QuizzesPage'
 import './index.css'
 
 function App() {
@@ -17,41 +18,12 @@ function App() {
       <div className="layout-container">
         <Navbar />
 
-        <main className="auth-wrapper">
+        <main
+          className="auth-wrapper"
+          style={{ flexDirection: 'column', alignItems: 'stretch' }}
+        >
           {token && user ? (
-            <div className="auth-card" style={{ maxWidth: '600px', textAlign: 'center' }}>
-              <h1 className="auth-title">Welcome, {user.name}!</h1>
-              <p className="auth-subtitle">
-                You are successfully signed in as <strong>{user.role}</strong>.
-              </p>
-              <div
-                style={{
-                  marginTop: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                }}
-              >
-                <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>
-                  This completes **Stage 1 (Database, Drizzle Schemas, JWT Auth, and Sleek Client-Side Auth Interface)**.
-                </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    justifyContent: 'center',
-                    marginTop: '12px',
-                  }}
-                >
-                  <div className="btn btn-primary" style={{ cursor: 'default' }}>
-                    API Connected
-                  </div>
-                  <div className="btn btn-secondary" style={{ cursor: 'default' }}>
-                    Token Active
-                  </div>
-                </div>
-              </div>
-            </div>
+            <QuizzesPage />
           ) : view === 'login' ? (
             <LoginPage onNavigateToRegister={() => setView('register')} />
           ) : (

@@ -1,8 +1,11 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import authRouter from './routes/auth'
+import quizzesRouter from './routes/quizzes'
+import { logger } from 'hono/logger'
 
 const app = new Hono()
+app.use(logger());
 
 app.use(
   '*',
@@ -17,9 +20,15 @@ app.use(
 )
 
 app.route('/api/auth', authRouter)
+app.route('/api/quizzes', quizzesRouter)
 
 app.get('/', (c) => {
   return c.text('Hello QuizForge API!')
 })
 
-export default app
+
+// export default {
+//   port: 5000,
+//   fetch: app.fetch
+// }
+export default app;
