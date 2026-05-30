@@ -1,11 +1,40 @@
 import React, { useState } from 'react'
 import useQuizzes from '../../hooks/useQuizzes'
+import useAttempt from '../../hooks/useAttempt'
 import authStore from '../../store/authStore'
+import quizSessionStore from '../../store/quizSessionStore'
+import api from '../../lib/axios'
 import { BookOpen, Clock, Award, ShieldAlert, Plus, Sparkles, Filter } from 'lucide-react'
 
 const QuizzesPage: React.FC = () => {
   const { user } = authStore()
   const { quizzes, isLoading, createQuiz } = useQuizzes()
+  const { startAttempt } = useAttempt()
+  const { setSession } = quizSessionStore()
+  const [startingQuizId, setStartingQuizId] = useState<string | null>(null)
+
+  const handleStartQuiz = async (quizId: string, durationMinutes: number) => {
+    const quiz = quizzes.find((q) => q.id === quizId)
+    if (!quiz) return
+
+    setStartingQuizId(quizId)
+    try {
+      const startRes = await startAttempt(quizId)
+      const response = await api.get(`/quizzes/${quizId}/questions`)
+      setSession(
+        startRes.attempt.id,
+        quizId,
+        quiz.title,
+        quiz.negativeMarks,
+        response.data.questions,
+        durationMinutes
+      )
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to start quiz attempt')
+    } finally {
+      setStartingQuizId(null)
+    }
+  }
 
   const [category, setCategory] = useState('All')
   const [difficulty, setDifficulty] = useState('All')
@@ -401,11 +430,14 @@ const QuizzesPage: React.FC = () => {
               <button
                 className="btn btn-primary"
                 style={{ width: '100%', marginTop: '24px' }}
-                onClick={() =>
-                  alert(`Starting Quiz: ${quiz.title} (Requires Stage 3 Timed Engine)`)
-                }
+                onClick={() => handleStartQuiz(quiz.id, quiz.durationMinutes)}
+                disabled={startingQuizId !== null}
               >
-                Start Assessment
+                {startingQuizId === quiz.id ? (
+                  <div className="spinner" />
+                ) : (
+                  <span>Start Assessment</span>
+                )}
               </button>
             </div>
           ))}

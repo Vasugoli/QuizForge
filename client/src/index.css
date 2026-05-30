@@ -538,3 +538,13 @@ body {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--border-glow);
 }
+
+@keyframes pulse-error {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.pulse-error {
+  display: inline-block;
+  animation: pulse-error 0.5s infinite alternate ease-in-out;
+}

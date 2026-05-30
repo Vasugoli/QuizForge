@@ -19,3 +19,15 @@ export interface Quiz {
   negativeMarks: string
   isPublished: boolean
 }
+
+export interface Attempt {
+  id: string
+  userId: string
+  quizId: string
+  startedAt: string
+  submittedAt?: string | null
+  score?: string | null
+  totalMarks?: number | null
+  timeTaken?: number | null
+  status: 'IN_PROGRESS' | 'SUBMITTED' | 'TIMED_OUT'
+}
