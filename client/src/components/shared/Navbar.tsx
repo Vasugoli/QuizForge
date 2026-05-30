@@ -2,7 +2,7 @@ import React from 'react'
 import authStore from '../../store/authStore'
 import navigationStore from '../../store/navigationStore'
 import ThemeToggle from './ThemeToggle'
-import { LogOut, User as UserIcon, BookOpen, Trophy, LayoutDashboard } from 'lucide-react'
+import { LogOut, User as UserIcon, BookOpen, Trophy, LayoutDashboard, Shield } from 'lucide-react'
 
 const Navbar: React.FC = () => {
   const { user, logout } = authStore()
@@ -46,6 +46,16 @@ const Navbar: React.FC = () => {
             <LayoutDashboard size={14} />
             <span>Dashboard</span>
           </button>
+          {user.role === 'ADMIN' && (
+            <button
+              className={`btn ${view === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setView('admin')}
+              style={{ padding: '8px 14px', fontSize: '13px', gap: '6px' }}
+            >
+              <Shield size={14} />
+              <span>Admin Console</span>
+            </button>
+          )}
         </nav>
       )}
 

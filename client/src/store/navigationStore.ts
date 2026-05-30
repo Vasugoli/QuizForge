@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type AppView = 'catalog' | 'dashboard' | 'leaderboard' | 'result-detail'
+export type AppView = 'catalog' | 'dashboard' | 'leaderboard' | 'result-detail' | 'admin'
 
 interface NavigationState {
   view: AppView

@@ -4,6 +4,7 @@ import authRouter from './routes/auth'
 import quizzesRouter from './routes/quizzes'
 import attemptsRouter from './routes/attempts'
 import leaderboardRouter from './routes/leaderboard'
+import adminRouter from './routes/admin'
 import { logger } from 'hono/logger'
 
 const app = new Hono()
@@ -25,6 +26,7 @@ app.route('/api/auth', authRouter)
 app.route('/api/quizzes', quizzesRouter)
 app.route('/api/attempts', attemptsRouter)
 app.route('/api/leaderboard', leaderboardRouter)
+app.route('/api/admin', adminRouter)
 
 app.get('/', (c) => {
   return c.text('Hello QuizForge API!')

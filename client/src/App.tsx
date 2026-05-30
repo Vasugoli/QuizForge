@@ -12,6 +12,7 @@ import QuizAttemptPage from './pages/quizzes/QuizAttemptPage'
 import ResultDetailPage from './pages/results/ResultDetailPage'
 import LeaderboardPage from './pages/leaderboard/LeaderboardPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import './index.css'
 
 function App() {
@@ -42,6 +43,8 @@ function App() {
         return <DashboardPage />
       case 'result-detail':
         return <ResultDetailPage />
+      case 'admin':
+        return <AdminDashboardPage />
       default:
         return <QuizzesPage />
     }
