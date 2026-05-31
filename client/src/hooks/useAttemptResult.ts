@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import api from '../lib/axios'
-import type { Attempt, Quiz } from '../types'
+import api from '@/lib/axios'
+import type { Attempt, Quiz } from '@/types'
 
 export interface AttemptBreakdownItem {
   question: {

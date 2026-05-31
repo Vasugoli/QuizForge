@@ -1,8 +1,13 @@
 import React from 'react'
-import useAttempt from '../../hooks/useAttempt'
-import authStore from '../../store/authStore'
-import navigationStore from '../../store/navigationStore'
-import { Award, Clock, Calendar, ChevronRight, User as UserIcon, Sparkles, BookOpen, CheckCircle2, History } from 'lucide-react'
+import useAttempt from '@/hooks/useAttempt'
+import authStore from '@/store/authStore'
+import navigationStore from '@/store/navigationStore'
+import Avatar from 'boring-avatars'
+import { Award, Clock, Calendar, ChevronRight, Sparkles, BookOpen, CheckCircle2, History } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 const DashboardPage: React.FC = () => {
   const { user } = authStore()
@@ -14,14 +19,14 @@ const DashboardPage: React.FC = () => {
 
   // Computations
   const totalAttempts = submittedAttempts.length
-  
+
   const totalScore = submittedAttempts.reduce((sum, att) => sum + parseFloat(att.score || '0'), 0)
   const totalMax = submittedAttempts.reduce((sum, att) => sum + (att.totalMarks || att.quiz?.totalMarks || 10), 0)
-  
+
   const avgAccuracy = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0
-  
-  const avgSpeed = totalAttempts > 0 
-    ? Math.round(submittedAttempts.reduce((sum, att) => sum + (att.timeTaken || 0), 0) / totalAttempts) 
+
+  const avgSpeed = totalAttempts > 0
+    ? Math.round(submittedAttempts.reduce((sum, att) => sum + (att.timeTaken || 0), 0) / totalAttempts)
     : 0
 
   // Format time taken
@@ -49,19 +54,19 @@ const DashboardPage: React.FC = () => {
     const strokeDashoffset = circumference - (accuracy / 100) * circumference
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', height: '140px' }}>
-        <svg width="160" height="100" style={{ transform: 'translateY(15px)' }}>
+      <div className="flex flex-col items-center justify-center relative w-full h-[140px]">
+        <svg width="160" height="100" className="translate-y-[15px]">
           <defs>
             <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="var(--accent)" />
-              <stop offset="100%" stopColor="var(--primary)" />
+              <stop offset="0%" stopColor="hsl(var(--accent-foreground))" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" />
             </linearGradient>
           </defs>
           {/* Background track */}
           <path
             d="M 20 90 A 60 60 0 0 1 140 90"
             fill="none"
-            stroke="var(--bg-input)"
+            stroke="hsl(var(--muted))"
             strokeWidth="12"
             strokeLinecap="round"
           />
@@ -74,14 +79,14 @@ const DashboardPage: React.FC = () => {
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 1.5s ease-out-in' }}
+            style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
           />
         </svg>
-        <div style={{ position: 'absolute', bottom: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <span style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
+        <div className="absolute bottom-[15px] flex flex-col items-center">
+          <span className="text-3xl font-extrabold text-foreground tracking-tight">
             {accuracy}%
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+          <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
             Avg Accuracy
           </span>
         </div>
@@ -93,10 +98,10 @@ const DashboardPage: React.FC = () => {
   const renderProgressChart = () => {
     if (totalAttempts < 2) {
       return (
-        <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <div>
-            <History size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
-            <p style={{ fontSize: '13px' }}>Progression line chart will unlock once you complete 2 or more assessments.</p>
+        <div className="h-[160px] flex items-center justify-center border border-dashed border-border rounded-md p-6 text-center text-muted-foreground">
+          <div className="space-y-2">
+            <History className="h-6 w-6 mx-auto opacity-50" />
+            <p className="text-xs">Progression line chart will unlock once you complete 2 or more assessments.</p>
           </div>
         </div>
       )
@@ -128,7 +133,6 @@ const DashboardPage: React.FC = () => {
     // Construct path coordinates
     const coords = dataPoints.map((val, i) => {
       const x = paddingLeft + i * stepX
-      // Percentage maps 0-100 to graphHeight-0
       const y = paddingTop + graphHeight - (val / 100) * graphHeight
       return { x, y, value: val }
     })
@@ -140,37 +144,37 @@ const DashboardPage: React.FC = () => {
     const areaPath = linePath + ` L ${coords[coords.length - 1].x} ${paddingTop + graphHeight} L ${coords[0].x} ${paddingTop + graphHeight} Z`
 
     return (
-      <div style={{ width: '100%', overflowX: 'auto' }}>
-        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} width="100%" height="150" style={{ display: 'block', overflow: 'visible' }}>
+      <div className="w-full overflow-x-auto">
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} width="100%" height="150" className="block overflow-visible">
           <defs>
             <linearGradient id="chart-area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
           {/* Grid lines */}
-          <line x1={paddingLeft} y1={paddingTop} x2={chartWidth - paddingRight} y2={paddingTop} stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="3 3" />
-          <line x1={paddingLeft} y1={paddingTop + graphHeight / 2} x2={chartWidth - paddingRight} y2={paddingTop + graphHeight / 2} stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="3 3" />
-          <line x1={paddingLeft} y1={paddingTop + graphHeight} x2={chartWidth - paddingRight} y2={paddingTop + graphHeight} stroke="var(--border-color)" strokeWidth="1" />
+          <line x1={paddingLeft} y1={paddingTop} x2={chartWidth - paddingRight} y2={paddingTop} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="3 3" />
+          <line x1={paddingLeft} y1={paddingTop + graphHeight / 2} x2={chartWidth - paddingRight} y2={paddingTop + graphHeight / 2} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="3 3" />
+          <line x1={paddingLeft} y1={paddingTop + graphHeight} x2={chartWidth - paddingRight} y2={paddingTop + graphHeight} stroke="hsl(var(--border))" strokeWidth="1" />
 
           {/* Y Axis Labels */}
-          <text x={paddingLeft - 10} y={paddingTop + 4} fill="var(--text-muted)" fontSize="9" textAnchor="end" fontWeight="600">100%</text>
-          <text x={paddingLeft - 10} y={paddingTop + graphHeight / 2 + 3} fill="var(--text-muted)" fontSize="9" textAnchor="end" fontWeight="600">50%</text>
-          <text x={paddingLeft - 10} y={paddingTop + graphHeight + 3} fill="var(--text-muted)" fontSize="9" textAnchor="end" fontWeight="600">0%</text>
+          <text x={paddingLeft - 10} y={paddingTop + 4} fill="hsl(var(--muted-foreground))" fontSize="9" textAnchor="end" fontWeight="600">100%</text>
+          <text x={paddingLeft - 10} y={paddingTop + graphHeight / 2 + 3} fill="hsl(var(--muted-foreground))" fontSize="9" textAnchor="end" fontWeight="600">50%</text>
+          <text x={paddingLeft - 10} y={paddingTop + graphHeight + 3} fill="hsl(var(--muted-foreground))" fontSize="9" textAnchor="end" fontWeight="600">0%</text>
 
-          {/* Gradient Fill Area under the curve */}
+          {/* Gradient Fill Area */}
           <path d={areaPath} fill="url(#chart-area-grad)" />
 
           {/* Main Curved Line */}
-          <path d={linePath} fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" />
+          <path d={linePath} fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" />
 
-          {/* Interactive Data Nodes */}
+          {/* Data Nodes */}
           {coords.map((c, i) => (
-            <g key={i} className="chart-node">
-              <circle cx={c.x} cy={c.y} r="5" fill="var(--bg-secondary)" stroke="var(--primary)" strokeWidth="2.5" />
-              <rect x={c.x - 14} y={c.y - 20} width="28" height="14" rx="3" fill="var(--bg-input)" stroke="var(--border-color)" strokeWidth="0.5" />
-              <text x={c.x} y={c.y - 10} fill="var(--text-primary)" fontSize="8" fontWeight="700" textAnchor="middle">{c.value}%</text>
+            <g key={i} className="group">
+              <circle cx={c.x} cy={c.y} r="5" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="2.5" />
+              <rect x={c.x - 14} y={c.y - 22} width="28" height="14" rx="3" fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5" />
+              <text x={c.x} y={c.y - 12} fill="hsl(var(--foreground))" fontSize="8" fontWeight="700" textAnchor="middle">{c.value}%</text>
             </g>
           ))}
         </svg>
@@ -179,264 +183,226 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div style={{ paddingBottom: '80px', width: '100%', textAlign: 'left', animation: 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-      {/* Dynamic Profile Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '40px',
-          marginBottom: '32px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div
-            className="logo-icon"
-            style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: 'var(--bg-input)',
-              color: 'var(--text-primary)',
-              fontSize: '24px',
-              boxShadow: 'none',
-              border: '2px solid var(--border-color)',
-            }}
-          >
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt=""
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+    <div className="space-y-8 pb-16 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Profile Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center h-16 w-16 rounded-full border border-border bg-card overflow-hidden shadow-sm">
+            {!user?.avatarUrl || user.avatarUrl.includes('unsplash.com') ? (
+              <Avatar
+                size={64}
+                name={user?.name || 'Participant'}
+                variant="beam"
+                colors={['#4F6EF7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b']}
               />
             ) : (
-              <UserIcon size={24} />
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="h-full w-full object-cover"
+              />
             )}
           </div>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontFamily: 'var(--font-heading)',
-              }}
-            >
-              <Sparkles size={24} style={{ color: 'var(--primary)' }} />
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
               Welcome back, {user?.name || 'Forged Participant'}
             </h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>
+            <p className="text-sm text-muted-foreground">
               Track your stats, view previous submissions, and climb higher in the ranks.
             </p>
           </div>
         </div>
 
-        <button
-          className="btn btn-primary"
+        <Button
           onClick={() => setView('catalog')}
-          style={{ padding: '10px 20px' }}
+          className="gap-2 cursor-pointer shadow-sm self-start sm:self-auto"
         >
-          <BookOpen size={16} />
+          <BookOpen className="h-4 w-4" />
           <span>Browse Assessments</span>
-        </button>
+        </Button>
       </div>
 
       {/* Aggregate Score Grid Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <History size={24} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="flex items-center gap-4 p-5 shadow-sm border border-border bg-card">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <History className="h-6 w-6" />
           </div>
           <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', fontWeight: 600, textTransform: 'uppercase' }}>Assessments Done</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>{totalAttempts}</span>
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Assessments Done</span>
+            <span className="text-2xl font-bold tracking-tight text-foreground">{totalAttempts}</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: 'rgba(217, 70, 239, 0.1)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Award size={24} />
+        <Card className="flex items-center gap-4 p-5 shadow-sm border border-border bg-card">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Award className="h-6 w-6" />
           </div>
           <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', fontWeight: 600, textTransform: 'uppercase' }}>Avg Accuracy</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>{avgAccuracy}%</span>
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Avg Accuracy</span>
+            <span className="text-2xl font-bold tracking-tight text-foreground">{avgAccuracy}%</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Clock size={24} />
+        <Card className="flex items-center gap-4 p-5 shadow-sm border border-border bg-card">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Clock className="h-6 w-6" />
           </div>
           <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', fontWeight: 600, textTransform: 'uppercase' }}>Avg Speed</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>{formatTime(avgSpeed)}</span>
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Avg Speed</span>
+            <span className="text-2xl font-bold tracking-tight text-foreground">{formatTime(avgSpeed)}</span>
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Visual Analytics Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', marginBottom: '40px' }}>
-        {/* Left Side: Accuracy Radial Gauge */}
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '30px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '20px', alignSelf: 'flex-start' }}>Overall Accuracy</h3>
+      {/* Visual Analytics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 border border-border bg-card shadow-sm">
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground mb-4">Overall Accuracy</h3>
           {isAttemptsLoading ? (
-            <div style={{ height: '140px', display: 'flex', alignItems: 'center' }}>Loading...</div>
+            <div className="h-[140px] flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             renderAccuracyGauge(avgAccuracy)
           )}
-        </div>
+        </Card>
 
-        {/* Right Side: Score Progress Curve */}
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '30px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '20px' }}>Score Progression</h3>
+        <Card className="p-6 border border-border bg-card shadow-sm">
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground mb-4">Score Progression</h3>
           {isAttemptsLoading ? (
-            <div style={{ height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>
+            <div className="h-[150px] flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             renderProgressChart()
           )}
-        </div>
+        </Card>
       </div>
 
       {/* Attempts History */}
-      <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <CheckCircle2 style={{ color: 'var(--primary)' }} />
-        Assessment Attempt History
-      </h2>
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+          Assessment Attempt History
+        </h2>
 
-      {isAttemptsLoading ? (
-        <div style={{ padding: '40px 0', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Retrieving submission logs...</p>
-        </div>
-      ) : attempts.length === 0 ? (
-        <div className="auth-card" style={{ maxWidth: '100%', padding: '60px', textAlign: 'center' }}>
-          <History size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
-          <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>No Attempts Registered</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            You haven't initiated any assessment attempts yet.
-          </p>
-          <button className="btn btn-primary" onClick={() => setView('catalog')}>
-            Start Forging Now
-          </button>
-        </div>
-      ) : (
-        <div
-          className="auth-card"
-          style={{
-            maxWidth: '100%',
-            padding: '24px',
-            background: 'var(--bg-card)',
-            overflowX: 'auto',
-          }}
-        >
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600 }}>ASSESSMENT</th>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600 }}>SCORE SECURED</th>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600 }}>TIME ELAPSED</th>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600 }}>ATTEMPT STATUS</th>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600 }}>DATE COMPLETED</th>
-                <th style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attempts.map((att) => {
-                const scoreStr = att.score ?? '0.00'
-                const totalM = att.totalMarks ?? att.quiz?.totalMarks ?? 10
-                const isPassing = att.quiz?.passMarks != null 
-                  ? parseFloat(scoreStr) >= att.quiz.passMarks 
-                  : parseFloat(scoreStr) >= totalM * 0.5
+        {isAttemptsLoading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            Retrieving submission logs...
+          </div>
+        ) : attempts.length === 0 ? (
+          <Card className="p-10 text-center border border-border bg-card shadow-sm">
+            <History className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-bold text-foreground mb-2">No Attempts Registered</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              You haven't initiated any assessment attempts yet.
+            </p>
+            <Button onClick={() => setView('catalog')} className="cursor-pointer shadow-sm">
+              Start Forging Now
+            </Button>
+          </Card>
+        ) : (
+          <Card className="border border-border bg-card shadow-sm overflow-hidden">
+            <div className="overflow-x-auto w-full">
+              <Table className="w-full">
+                <TableHeader className="bg-muted/50 border-b border-border">
+                  <TableRow>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assessment</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Score Secured</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time Elapsed</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date Completed</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {attempts.map((att) => {
+                    const scoreStr = att.score ?? '0.00'
+                    const totalM = att.totalMarks ?? att.quiz?.totalMarks ?? 10
+                    const isPassing = att.quiz?.passMarks != null
+                      ? parseFloat(scoreStr) >= att.quiz.passMarks
+                      : parseFloat(scoreStr) >= totalM * 0.5
 
-                return (
-                  <tr
-                    key={att.id}
-                    style={{ borderBottom: '1px solid var(--border-color)', transition: 'var(--transition)' }}
-                    className="leaderboard-row"
-                  >
-                    <td style={{ padding: '16px 12px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 600, fontSize: '15px' }}>{att.quiz?.title || 'Unknown Assessment'}</span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          Category: {att.quiz?.category || 'General'}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 12px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 800, fontSize: '15px', color: isPassing ? 'var(--success)' : 'var(--error)' }}>
-                          {att.status === 'IN_PROGRESS' ? '—' : `${att.score} / ${totalM}`}
-                        </span>
-                        {att.status !== 'IN_PROGRESS' && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {isPassing ? 'Passing Grade' : 'Below Passing'}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                        <Clock size={14} />
-                        <span>{att.status === 'IN_PROGRESS' ? '—' : formatTime(att.timeTaken)}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 12px' }}>
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                          background:
-                            att.status === 'SUBMITTED'
-                              ? 'rgba(16, 185, 129, 0.1)'
+                    return (
+                      <TableRow key={att.id} className="hover:bg-muted/30 transition-colors duration-150 border-b border-border">
+                        <TableCell className="py-4">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-foreground">{att.quiz?.title || 'Unknown Assessment'}</span>
+                            <span className="text-xs text-muted-foreground mt-1">
+                              Category: {att.quiz?.category || 'General'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className={`font-extrabold text-sm ${isPassing ? 'text-green-600 dark:text-green-500' : 'text-destructive'}`}>
+                              {att.status === 'IN_PROGRESS' ? '—' : `${att.score} / ${totalM}`}
+                            </span>
+                            {att.status !== 'IN_PROGRESS' && (
+                              <span className="text-[10px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
+                                {isPassing ? 'Passing Grade' : 'Below Passing'}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{att.status === 'IN_PROGRESS' ? '—' : formatTime(att.timeTaken)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              att.status === 'SUBMITTED'
+                                ? 'default'
+                                : att.status === 'IN_PROGRESS'
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${
+                              att.status === 'SUBMITTED'
+                                ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30'
+                                : att.status === 'IN_PROGRESS'
+                                ? 'bg-primary/10 text-primary border-primary/20'
+                                : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30'
+                            }`}
+                          >
+                            {att.status === 'SUBMITTED'
+                              ? 'SUBMITTED'
                               : att.status === 'IN_PROGRESS'
-                              ? 'rgba(139, 92, 246, 0.1)'
-                              : 'rgba(245, 158, 11, 0.1)',
-                          color:
-                            att.status === 'SUBMITTED'
-                              ? 'var(--success)'
-                              : att.status === 'IN_PROGRESS'
-                              ? 'var(--primary)'
-                              : 'var(--warning)',
-                        }}
-                      >
-                        {att.status === 'SUBMITTED'
-                          ? 'SUBMITTED'
-                          : att.status === 'IN_PROGRESS'
-                          ? 'IN PROGRESS'
-                          : 'TIMED OUT'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '13px' }}>
-                        <Calendar size={13} />
-                        <span>{formatDate(att.submittedAt || att.startedAt)}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                      {att.status !== 'IN_PROGRESS' ? (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setView('result-detail', { attemptId: att.id })}
-                          style={{ padding: '6px 12px', fontSize: '12px', borderRadius: 'var(--radius-sm)' }}
-                        >
-                          <span>Detailed Analysis</span>
-                          <ChevronRight size={12} />
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Active Session</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                              ? 'IN PROGRESS'
+                              : 'TIMED OUT'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{formatDate(att.submittedAt || att.startedAt)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {att.status !== 'IN_PROGRESS' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1 cursor-pointer border-border hover:bg-muted"
+                              onClick={() => setView('result-detail', { attemptId: att.id })}
+                            >
+                              <span>Analysis</span>
+                              <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground font-semibold">Active Session</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

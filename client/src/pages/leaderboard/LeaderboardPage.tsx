@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import useLeaderboard from '../../hooks/useLeaderboard'
-import useQuizzes from '../../hooks/useQuizzes'
-import navigationStore from '../../store/navigationStore'
-import { Award, Trophy, Clock, Calendar, ArrowLeft, Filter, User as UserIcon } from 'lucide-react'
+import useLeaderboard from '@/hooks/useLeaderboard'
+import useQuizzes from '@/hooks/useQuizzes'
+import navigationStore from '@/store/navigationStore'
+import Avatar from 'boring-avatars'
+import { Award, Trophy, Clock, Calendar, ArrowLeft, Filter } from 'lucide-react'
 
 const LeaderboardPage: React.FC = () => {
   const { selectedQuizId, setView } = navigationStore()
@@ -217,14 +218,19 @@ const LeaderboardPage: React.FC = () => {
                       border: '2px solid var(--border-color)',
                     }}
                   >
-                    {entry.user.avatarUrl ? (
+                    {!entry.user.avatarUrl || entry.user.avatarUrl.includes('unsplash.com') ? (
+                      <Avatar
+                        size={64}
+                        name={entry.user.name}
+                        variant="beam"
+                        colors={['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b']}
+                      />
+                    ) : (
                       <img
                         src={entry.user.avatarUrl}
                         alt=""
                         style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                       />
-                    ) : (
-                      <UserIcon size={24} />
                     )}
                   </div>
 
@@ -338,14 +344,19 @@ const LeaderboardPage: React.FC = () => {
                               border: '1px solid var(--border-color)',
                             }}
                           >
-                            {entry.user.avatarUrl ? (
+                            {!entry.user.avatarUrl || entry.user.avatarUrl.includes('unsplash.com') ? (
+                              <Avatar
+                                size={32}
+                                name={entry.user.name}
+                                variant="beam"
+                                colors={['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b']}
+                              />
+                            ) : (
                               <img
                                 src={entry.user.avatarUrl}
                                 alt=""
                                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                               />
-                            ) : (
-                              <UserIcon size={14} />
                             )}
                           </div>
                           <span style={{ fontWeight: 600 }}>{entry.user.name}</span>

@@ -4,8 +4,11 @@
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
+    "types": ["bun"],
     "paths": {
       "@/*": ["./src/*"]
-    }
-  }
+    },
+  },
+  "outDir": "./dist",
+  "rootDir": "./src",
 }

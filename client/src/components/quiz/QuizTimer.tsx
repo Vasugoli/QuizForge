@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import quizSessionStore from '../../store/quizSessionStore'
+import quizSessionStore from '@/store/quizSessionStore'
 
 const QuizTimer: React.FC = () => {
   const { timeLeft, tick, isActive } = quizSessionStore()
@@ -20,26 +20,23 @@ const QuizTimer: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  const isLow = timeLeft < 60
+  // Timer Color and Animation States (based on design.md)
+  let timerClass = 'text-green-600 dark:text-green-500 border-green-500/20'
+  
+  if (timeLeft < 10) {
+    // Danger: <10s remaining (Red, Fast Pulse + Glow Shadow)
+    timerClass = 'text-red-600 dark:text-red-500 border-red-500 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+  } else if (timeLeft <= 30) {
+    // Warning: 10-30s remaining (Amber, Subtle Pulse)
+    timerClass = 'text-amber-600 dark:text-amber-500 border-amber-500 animate-pulse'
+  }
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '10px 16px',
-        borderRadius: 'var(--radius-sm)',
-        background: isLow ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-input)',
-        color: isLow ? 'var(--error)' : 'var(--primary)',
-        fontWeight: 700,
-        fontFamily: 'var(--font-heading)',
-        fontSize: '18px',
-        border: `1px solid ${isLow ? 'var(--error)' : 'var(--border-color)'}`,
-        transition: 'var(--transition)',
-      }}
+      className={`fixed top-6 right-6 z-1000 flex items-center gap-2 px-5 py-3 rounded-lg bg-card/85 backdrop-blur-md font-mono text-2xl font-bold border shadow-sm transition-all duration-200 ${timerClass}`}
+      aria-live="polite"
     >
-      <span className={isLow ? 'pulse-error' : ''}>{formatTime(timeLeft)}</span>
+      <span>{formatTime(timeLeft)}</span>
     </div>
   )
 }

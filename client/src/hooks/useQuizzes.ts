@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../lib/axios'
-import type { Quiz } from '../types'
+import api from '@/lib/axios'
+import type { Quiz } from '@/types'
 
 const useQuizzes = () => {
   const queryClient = useQueryClient()

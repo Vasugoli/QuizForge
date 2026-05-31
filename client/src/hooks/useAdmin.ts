@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../lib/axios'
+import api from '@/lib/axios'
 
 export interface AdminMetrics {
   totalUsers: number
@@ -104,7 +104,7 @@ const useAdmin = () => {
       link.click()
       document.body.removeChild(link)
     } catch (err) {
-      throw new Error('Failed to export CSV results.')
+      throw new Error('Failed to export CSV results.', { cause: err })
     }
   }
 
@@ -112,14 +112,14 @@ const useAdmin = () => {
     analytics: analyticsQuery.data || null,
     isAnalyticsLoading: analyticsQuery.isLoading,
     refetchAnalytics: analyticsQuery.refetch,
-    
+
     users: usersQuery.data || [],
     isUsersLoading: usersQuery.isLoading,
     refetchUsers: usersQuery.refetch,
-    
+
     bulkUpload: bulkUploadMutation.mutateAsync,
     isUploading: bulkUploadMutation.isPending,
-    
+
     toggleUserBlock: toggleBlockMutation.mutateAsync,
     isTogglingBlock: toggleBlockMutation.isPending,
 

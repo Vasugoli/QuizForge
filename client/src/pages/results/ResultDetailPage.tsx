@@ -1,35 +1,73 @@
 import React from 'react'
-import useAttemptResult from '../../hooks/useAttemptResult'
-import navigationStore from '../../store/navigationStore'
+import useAttemptResult from '@/hooks/useAttemptResult'
+import navigationStore from '@/store/navigationStore'
 import { Award, Clock, ArrowLeft, CheckCircle2, XCircle, AlertCircle, AlertTriangle } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 const ResultDetailPage: React.FC = () => {
   const { selectedAttemptId, setView } = navigationStore()
   const { data: result, isLoading, error } = useAttemptResult(selectedAttemptId)
 
+  const [animatedScore, setAnimatedScore] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!result) return
+
+    const targetScore = parseFloat(result.attempt.score || '0')
+    if (targetScore === 0) {
+      return
+    }
+
+    let startTimestamp: number | null = null
+    const duration = 1200 // 1.2s count up animation matching design.md
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp
+      const elapsed = timestamp - startTimestamp
+      const progress = Math.min(elapsed / duration, 1)
+      const easeOutQuad = progress * (2 - progress) // Smooth decelerating easing
+
+      const currentScore = parseFloat((easeOutQuad * targetScore).toFixed(2))
+      setAnimatedScore(currentScore)
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step)
+      } else {
+        setAnimatedScore(targetScore)
+      }
+    }
+
+    const animFrame = window.requestAnimationFrame(step)
+    return () => window.cancelAnimationFrame(animFrame)
+  }, [result])
+
   if (isLoading) {
     return (
-      <div style={{ padding: '80px 0', textAlign: 'center' }}>
-        <div className="logo-icon" style={{ margin: '0 auto 20px', animation: 'spin 1s linear infinite' }}>
+      <div className="py-32 text-center flex flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center bg-linear-to-br from-primary to-blue-400 text-white w-10 h-10 rounded-md font-extrabold text-sm animate-spin">
           Q
         </div>
-        <p style={{ color: 'var(--text-secondary)' }}>Analyzing attempt results...</p>
+        <span>Analyzing attempt results...</span>
       </div>
     )
   }
 
   if (error || !result) {
     return (
-      <div style={{ padding: '80px 0', textAlign: 'center' }}>
-        <AlertTriangle size={48} style={{ color: 'var(--error)', marginBottom: '16px' }} />
-        <h2 style={{ fontSize: '24px', marginBottom: '8px' }}>Failed to Load Results</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          {error?.message || 'The requested attempt record could not be retrieved.'}
-        </p>
-        <button className="btn btn-secondary" onClick={() => setView('dashboard')}>
-          <ArrowLeft size={16} />
+      <div className="py-24 text-center max-w-[480px] mx-auto space-y-6">
+        <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Failed to Load Results</h2>
+          <p className="text-sm text-muted-foreground">
+            {error?.message || 'The requested attempt record could not be retrieved.'}
+          </p>
+        </div>
+        <Button variant="outline" className="cursor-pointer border-border" onClick={() => setView('dashboard')}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
           <span>Back to Dashboard</span>
-        </button>
+        </Button>
       </div>
     )
   }
@@ -37,8 +75,9 @@ const ResultDetailPage: React.FC = () => {
   const { attempt, quiz, breakdown } = result
   const scoreNum = parseFloat(attempt.score || '0')
   const totalNum = attempt.totalMarks || quiz.totalMarks
-  const percentage = Math.round((scoreNum / totalNum) * 100)
-  
+
+  const animatedPercentage = Math.round((animatedScore / totalNum) * 100)
+
   // Stats calculations
   const totalQuestions = breakdown.length
   const correctCount = breakdown.filter(item => item.userAnswer?.isCorrect).length
@@ -54,283 +93,222 @@ const ResultDetailPage: React.FC = () => {
     return `${mins}m ${secs}s`
   }
 
+  const isPassingScore = scoreNum >= (quiz.passMarks ?? totalNum * 0.5)
+
   return (
-    <div style={{ paddingBottom: '80px', width: '100%', textAlign: 'left', animation: 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+    <div className="space-y-8 pb-16 animate-in fade-in slide-in-from-bottom-4 duration-300 mt-6">
       {/* Top Navigation Row */}
-      <div style={{ marginTop: '40px', marginBottom: '24px' }}>
-        <button
-          className="btn btn-secondary"
+      <div>
+        <Button
+          variant="outline"
           onClick={() => setView('dashboard')}
-          style={{ padding: '8px 16px' }}
+          className="cursor-pointer border-border gap-2"
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft className="h-4 w-4" />
           <span>Back to Dashboard</span>
-        </button>
+        </Button>
       </div>
 
       {/* Main Glassmorphic Summary Card */}
-      <div className="auth-card" style={{ maxWidth: '100%', padding: '40px', marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '40px', alignItems: 'center' }}>
-          <div>
-            <span
-              style={{
-                textTransform: 'uppercase',
-                fontSize: '12px',
-                fontWeight: 700,
-                color: 'var(--primary)',
-                letterSpacing: '1px',
-                background: 'var(--primary-glow)',
-                padding: '4px 10px',
-                borderRadius: '20px',
-              }}
+      <Card className="border border-border bg-card shadow-sm overflow-hidden p-6 md:p-10">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-8 items-center">
+          <div className="space-y-6">
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full"
             >
               Assessment Completed
-            </span>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '32px', marginTop: '16px', marginBottom: '12px' }}>
-              {quiz.title}
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px', lineHeight: 1.6 }}>
-              {quiz.description || 'No description provided for this assessment.'}
-            </p>
+            </Badge>
+            <div className="space-y-2">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
+                {quiz.title}
+              </h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {quiz.description || 'No description provided for this assessment.'}
+              </p>
+            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', background: 'var(--bg-input)', padding: '20px', borderRadius: 'var(--radius-md)' }}>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>TIME TAKEN</span>
-                <span style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={16} style={{ color: 'var(--primary)' }} />
+            <div className="grid grid-cols-3 gap-4 bg-muted/30 border border-border p-4 rounded-lg">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Time Taken</span>
+                <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-primary" />
                   {formatTime(attempt.timeTaken)}
                 </span>
               </div>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>ACCURACY</span>
-                <span style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Award size={16} style={{ color: 'var(--accent)' }} />
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Accuracy</span>
+                <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-primary" />
                   {totalQuestions > 0 ? `${Math.round((correctCount / totalQuestions) * 100)}%` : '0%'}
                 </span>
               </div>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>STATUS</span>
-                <span
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: attempt.status === 'SUBMITTED' ? 'var(--success)' : 'var(--warning)',
-                  }}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Status</span>
+                <Badge
+                  variant="outline"
+                  className={`text-[9px] font-extrabold tracking-wide uppercase px-2 py-0.5 border ${
+                    attempt.status === 'SUBMITTED'
+                      ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/30'
+                      : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30'
+                  }`}
                 >
                   {attempt.status === 'SUBMITTED' ? 'SUBMITTED' : 'TIMED OUT'}
-                </span>
+                </Badge>
               </div>
             </div>
           </div>
 
           {/* Big Score Circular Ring Badge */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', borderLeft: '1px solid var(--border-color)' }}>
+          <div className="flex flex-col items-center justify-center p-6 border-t md:border-t-0 md:border-l border-border space-y-3">
             <div
-              style={{
-                width: '160px',
-                height: '160px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, var(--bg-input) 40%, transparent 100%)',
-                border: `8px solid ${percentage >= (quiz.passMarks ? (quiz.passMarks/quiz.totalMarks)*100 : 50) ? 'var(--success)' : 'var(--error)'}`,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'var(--shadow-glow)',
-                marginBottom: '16px',
-              }}
+              className={`w-36 h-36 rounded-full bg-muted/20 border-8 flex flex-col items-center justify-center shadow-sm ${
+                isPassingScore ? 'border-green-500' : 'border-destructive'
+              }`}
             >
-              <span style={{ fontSize: '36px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
-                {attempt.score}
+              <span className="text-4xl font-black text-foreground tracking-tight">
+                {animatedScore}
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <span className="text-[10px] text-muted-foreground font-semibold">
                 out of {totalNum}
               </span>
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>
-              {percentage}% Score
-            </span>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Passing Marks: {quiz.passMarks ?? 'N/A'}
-            </span>
+            <div className="text-center">
+              <span className="text-base font-extrabold text-foreground block">
+                {animatedPercentage}% Score
+              </span>
+              <span className="text-xs text-muted-foreground mt-0.5 block">
+                Passing Marks: {quiz.passMarks ?? 'N/A'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Answer Breakdown Header / Quick Stats */}
-      <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', marginBottom: '20px' }}>
-        Question-by-Question Analysis
-      </h2>
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold tracking-tight text-foreground">
+          Question-by-Question Analysis
+        </h2>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ flex: 1, background: 'var(--bg-card)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
-            <CheckCircle2 size={20} />
-          </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Correct</span>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>{correctCount}</span>
-          </div>
-        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="flex items-center gap-3 p-4 border border-border bg-card shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/30 text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Correct</span>
+              <span className="text-base font-bold text-foreground">{correctCount}</span>
+            </div>
+          </Card>
 
-        <div style={{ flex: 1, background: 'var(--bg-card)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--error)' }}>
-            <XCircle size={20} />
-          </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Wrong</span>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>{wrongCount}</span>
-          </div>
-        </div>
+          <Card className="flex items-center gap-3 p-4 border border-border bg-card shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <XCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Wrong</span>
+              <span className="text-base font-bold text-foreground">{wrongCount}</span>
+            </div>
+          </Card>
 
-        <div style={{ flex: 1, background: 'var(--bg-card)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(148, 163, 184, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-            <AlertCircle size={20} />
-          </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Skipped</span>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>{skippedCount}</span>
-          </div>
+          <Card className="flex items-center gap-3 p-4 border border-border bg-card shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Skipped</span>
+              <span className="text-base font-bold text-foreground">{skippedCount}</span>
+            </div>
+          </Card>
         </div>
       </div>
 
       {/* List of Questions & Selections */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="flex flex-col gap-6">
         {breakdown.map((item, index) => {
           const isCorrect = item.userAnswer?.isCorrect ?? false
           const isAnswered = !!item.userAnswer?.optionId
           const userOptionId = item.userAnswer?.optionId
 
-          let statusTheme = {
-            border: 'var(--border-color)',
-            badge: 'Unanswered',
-            badgeBg: 'var(--bg-input)',
-            badgeColor: 'var(--text-muted)',
-          }
+          let borderTheme = 'border-border'
+          let badgeText = 'Unanswered'
+          let badgeClass = 'bg-muted text-muted-foreground'
 
           if (isAnswered) {
             if (isCorrect) {
-              statusTheme = {
-                border: 'rgba(16, 185, 129, 0.4)',
-                badge: 'Correct',
-                badgeBg: 'rgba(16, 185, 129, 0.1)',
-                badgeColor: 'var(--success)',
-              }
+              borderTheme = 'border-green-500/30'
+              badgeText = 'Correct'
+              badgeClass = 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/20 border'
             } else {
-              statusTheme = {
-                border: 'rgba(239, 68, 68, 0.4)',
-                badge: 'Incorrect',
-                badgeBg: 'rgba(239, 68, 68, 0.1)',
-                badgeColor: 'var(--error)',
-              }
+              borderTheme = 'border-destructive/30'
+              badgeText = 'Incorrect'
+              badgeClass = 'bg-destructive/10 text-destructive border-destructive/20 border'
             }
           }
 
           return (
-            <div
+            <Card
               key={item.question.id}
-              className="auth-card"
-              style={{
-                maxWidth: '100%',
-                padding: '30px',
-                borderColor: statusTheme.border,
-                borderWidth: '2px',
-                background: 'var(--bg-card)',
-              }}
+              className={`p-6 md:p-8 border-2 bg-card shadow-sm ${borderTheme}`}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-muted)' }}>
+              <div className="flex justify-between items-start gap-4 mb-4">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">
                   Question {index + 1} of {totalQuestions}
                 </span>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      background: statusTheme.badgeBg,
-                      color: statusTheme.badgeColor,
-                    }}
-                  >
-                    {statusTheme.badge}
-                  </span>
+                <div className="flex gap-2 items-center">
+                  <Badge className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${badgeClass}`}>
+                    {badgeText}
+                  </Badge>
 
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
+                  <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-muted/40 text-muted-foreground border-border">
                     {item.userAnswer
                       ? `${parseFloat(item.userAnswer.marksEarned) >= 0 ? '+' : ''}${item.userAnswer.marksEarned} Marks`
                       : '0.00 Marks'}
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
-              <h3 style={{ fontSize: '18px', fontWeight: 600, lineHeight: 1.5, marginBottom: '24px' }}>
+              <h3 className="text-lg font-bold text-foreground leading-relaxed mb-6">
                 {item.question.text}
               </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="flex flex-col gap-3">
                 {item.options.map((opt) => {
                   const isUserSelection = opt.id === userOptionId
                   const isCorrectOption = opt.isCorrect
 
-                  let optionStyle: React.CSSProperties = {
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16px 20px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-secondary)',
-                    transition: 'var(--transition)',
-                  }
-
+                  let optionBorder = 'border-border'
+                  let optionBg = 'bg-card'
+                  let optionTextClass = 'text-foreground'
                   let iconElement = null
 
                   if (isCorrectOption) {
-                    optionStyle.borderColor = 'var(--success)'
-                    optionStyle.background = 'rgba(16, 185, 129, 0.05)'
-                    iconElement = <CheckCircle2 size={18} style={{ color: 'var(--success)', marginLeft: 'auto' }} />
+                    optionBorder = 'border-green-500'
+                    optionBg = 'bg-green-50/30 dark:bg-green-950/10'
+                    optionTextClass = 'text-green-700 dark:text-green-400 font-bold'
+                    iconElement = <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 ml-auto" />
                   } else if (isUserSelection && !isCorrectOption) {
-                    optionStyle.borderColor = 'var(--error)'
-                    optionStyle.background = 'rgba(239, 68, 68, 0.05)'
-                    iconElement = <XCircle size={18} style={{ color: 'var(--error)', marginLeft: 'auto' }} />
+                    optionBorder = 'border-destructive'
+                    optionBg = 'bg-destructive/5'
+                    optionTextClass = 'text-destructive font-bold'
+                    iconElement = <XCircle className="h-4 w-4 text-destructive ml-auto" />
                   }
 
                   return (
-                    <div key={opt.id} style={optionStyle}>
-                      <span
-                        style={{
-                          fontWeight: isUserSelection || isCorrectOption ? 700 : 500,
-                          color: isCorrectOption
-                            ? 'var(--success)'
-                            : isUserSelection
-                            ? 'var(--error)'
-                            : 'var(--text-primary)',
-                        }}
-                      >
-                        {opt.text}
-                      </span>
+                    <div
+                      key={opt.id}
+                      className={`flex items-center px-4 py-3.5 text-xs md:text-sm font-medium rounded-md border transition-colors duration-150 ${optionBorder} ${optionBg} ${optionTextClass}`}
+                    >
+                      <span>{opt.text}</span>
                       {isUserSelection && (
                         <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            color: isCorrectOption ? 'var(--success)' : 'var(--error)',
-                            background: isCorrectOption ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            marginLeft: '12px',
-                          }}
+                          className={`text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded ml-3 ${
+                            isCorrectOption
+                              ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400'
+                              : 'bg-destructive/20 text-destructive'
+                          }`}
                         >
                           Your Pick
                         </span>
@@ -340,7 +318,7 @@ const ResultDetailPage: React.FC = () => {
                   )
                 })}
               </div>
-            </div>
+            </Card>
           )
         })}
       </div>
